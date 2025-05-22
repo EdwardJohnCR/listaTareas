@@ -3,58 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrador de Tareas - Mantenimiento</title>
+    <title>Administrador de Tareas</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1000px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
             background-color: #f5f5f5;
             color: #333;
+            font-size: 14px;
         }
         
         h1 {
             text-align: center;
             color: #2c3e50;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
         }
         
         .task-form {
             background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
         
         .form-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 10px;
             align-items: center;
         }
         
         .form-group {
             flex: 1;
-            min-width: 150px;
+            min-width: 120px;
         }
         
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             font-weight: 600;
             color: #2c3e50;
+            font-size: 0.9em;
         }
         
         select, input, button {
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             width: 100%;
-            font-size: 14px;
+            font-size: 0.9em;
         }
         
         button {
@@ -63,7 +66,7 @@
             border: none;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.3s;
+            transition: background-color 0.2s;
         }
         
         button:hover {
@@ -72,8 +75,8 @@
         
         .add-task-btn {
             background-color: #2ecc71;
-            padding: 12px 20px;
-            font-size: 16px;
+            padding: 8px 15px;
+            font-size: 0.9em;
         }
         
         .add-task-btn:hover {
@@ -82,18 +85,17 @@
         
         .task-list {
             background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            padding: 10px;
         }
         
         .task-item {
             display: flex;
             align-items: center;
-            padding: 15px 10px;
+            padding: 10px 5px;
             border-bottom: 1px solid #eee;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 8px;
         }
         
         .task-item:last-child {
@@ -101,35 +103,36 @@
         }
         
         .task-checkbox {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             cursor: pointer;
+            margin-right: 5px;
         }
         
         .task-machine {
-            display: flex;
-            gap: 5px;
-            min-width: 100px;
+            min-width: 50px;
+            font-weight: 600;
         }
         
         .task-description {
             flex: 2;
-            min-width: 200px;
-            padding: 0 10px;
+            min-width: 150px;
+            padding: 0 5px;
+            font-size: 0.9em;
         }
         
         .task-priority {
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 3px 6px;
+            border-radius: 3px;
             font-weight: 600;
-            min-width: 80px;
+            min-width: 60px;
             text-align: center;
+            font-size: 0.8em;
         }
         
         .priority-high {
             background-color: #ffdddd;
             color: #c0392b;
-            font-weight: bold;
         }
         
         .priority-low {
@@ -143,22 +146,9 @@
         }
         
         .task-department {
-            display: flex;
-            gap: 5px;
-            min-width: 120px;
-        }
-        
-        .department-btn {
-            background: none;
-            border: none;
-            padding: 5px;
-            cursor: pointer;
+            min-width: 20px;
+            text-align: center;
             color: #7f8c8d;
-            font-size: 18px;
-        }
-        
-        .department-btn.active {
-            color: #3498db;
         }
         
         .task-actions {
@@ -170,10 +160,10 @@
         .action-btn {
             background: none;
             border: none;
-            padding: 5px;
+            padding: 3px;
             cursor: pointer;
             color: #7f8c8d;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         .action-btn:hover {
@@ -185,7 +175,7 @@
         }
         
         .completed {
-            opacity: 0.7;
+            opacity: 0.6;
             background-color: #f9f9f9;
         }
         
@@ -194,7 +184,6 @@
             color: #95a5a6;
         }
         
-        /* Estilos para el modal de notas */
         .modal {
             display: none;
             position: fixed;
@@ -209,80 +198,81 @@
         .modal-content {
             background-color: white;
             margin: 15% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 500px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 6px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         }
         
         .close-btn {
             color: #aaa;
             float: right;
-            font-size: 28px;
+            font-size: 22px;
             font-weight: bold;
             cursor: pointer;
         }
         
-        .close-btn:hover {
-            color: #333;
-        }
-        
         .note-textarea {
             width: 100%;
-            height: 150px;
-            padding: 10px;
-            margin: 15px 0;
+            height: 120px;
+            padding: 8px;
+            margin: 10px 0;
             border: 1px solid #ddd;
             border-radius: 4px;
             resize: vertical;
+            font-size: 0.9em;
         }
         
         .save-note-btn {
             background-color: #2ecc71;
-        }
-        
-        .save-note-btn:hover {
-            background-color: #27ae60;
+            padding: 8px 15px;
+            font-size: 0.9em;
         }
         
         .note-indicator {
             color: #3498db;
             cursor: pointer;
-            margin-left: 5px;
         }
         
         .note-indicator.has-note {
             color: #f39c12;
         }
         
-        @media (max-width: 768px) {
-            .form-row {
-                flex-direction: column;
-                align-items: stretch;
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+                font-size: 13px;
+            }
+            
+            .task-form {
+                padding: 10px;
+            }
+            
+            .form-group {
+                min-width: 100px;
             }
             
             .task-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
+                flex-wrap: wrap;
             }
             
-            .task-actions {
-                margin-left: 0;
-                width: 100%;
-                justify-content: flex-end;
+            .task-description {
+                min-width: 100%;
+                order: 1;
+                margin-top: 5px;
+                padding-left: 25px;
             }
         }
     </style>
 </head>
 <body>
-    <h1>Administrador de Tareas de Mantenimiento</h1>
+    <h1>Administrador de Tareas</h1>
     
     <div class="task-form">
         <div class="form-row">
             <div class="form-group">
-                <label for="machine-letter">Letra Máquina:</label>
+                <label for="machine-letter">Letra:</label>
                 <select id="machine-letter">
                     <option value="A">A</option>
                     <option value="B">B</option>
@@ -297,7 +287,7 @@
             </div>
             
             <div class="form-group">
-                <label for="machine-number">Número Máquina:</label>
+                <label for="machine-number">Número:</label>
                 <select id="machine-number">
                     <option value="01">01</option>
                     <option value="02">02</option>
@@ -318,13 +308,6 @@
             </div>
             
             <div class="form-group">
-                <label for="task-description">Descripción:</label>
-                <input type="text" id="task-description" placeholder="Descripción de la avería">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
                 <label for="task-priority">Prioridad:</label>
                 <select id="task-priority">
                     <option value="Alta">Alta</option>
@@ -332,25 +315,26 @@
                     <option value="Pendiente">Pendiente</option>
                 </select>
             </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group" style="flex: 3;">
+                <label for="task-description">Descripción:</label>
+                <input type="text" id="task-description" placeholder="Descripción de la avería">
+            </div>
             
             <div class="form-group">
-                <label>Departamento:</label>
-                <div class="department-buttons">
-                    <button type="button" class="department-btn active" data-department="Eléctrico">
-                        <i class="fas fa-bolt"></i> Eléctrico
-                    </button>
-                    <button type="button" class="department-btn" data-department="Mecánico">
-                        <i class="fas fa-cogs"></i> Mecánico
-                    </button>
-                    <button type="button" class="department-btn" data-department="Setup">
-                        <i class="fas fa-tools"></i> Setup
-                    </button>
-                </div>
+                <label>Depto:</label>
+                <select id="task-department">
+                    <option value="Eléctrico">Eléctrico</option>
+                    <option value="Mecánico">Mecánico</option>
+                    <option value="Setup">Setup</option>
+                </select>
             </div>
             
             <div class="form-group">
                 <button type="button" id="add-task-btn" class="add-task-btn">
-                    <i class="fas fa-plus"></i> Agregar Tarea
+                    <i class="fas fa-plus"></i> Agregar
                 </button>
             </div>
         </div>
@@ -365,7 +349,7 @@
         <div class="modal-content">
             <span class="close-btn">&times;</span>
             <h3>Notas de la Tarea</h3>
-            <textarea class="note-textarea" id="note-textarea" placeholder="Escribe aquí lo realizado en la máquina..."></textarea>
+            <textarea class="note-textarea" id="note-textarea" placeholder="Escribe aquí lo realizado..."></textarea>
             <button type="button" id="save-note-btn" class="save-note-btn">Guardar Nota</button>
         </div>
     </div>
@@ -383,32 +367,21 @@
             const machineNumber = document.getElementById('machine-number');
             const taskDescription = document.getElementById('task-description');
             const taskPriority = document.getElementById('task-priority');
-            const departmentBtns = document.querySelectorAll('.department-btn');
+            const taskDepartment = document.getElementById('task-department');
             const noteModal = document.getElementById('note-modal');
             const noteTextarea = document.getElementById('note-textarea');
             const saveNoteBtn = document.getElementById('save-note-btn');
             const closeBtn = document.querySelector('.close-btn');
-            
-            // Departamento seleccionado
-            let selectedDepartment = 'Eléctrico';
-            
-            // Event listeners para botones de departamento
-            departmentBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    departmentBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    selectedDepartment = this.getAttribute('data-department');
-                });
-            });
             
             // Agregar nueva tarea
             addTaskBtn.addEventListener('click', function() {
                 const machine = `${machineLetter.value}${machineNumber.value}`;
                 const description = taskDescription.value.trim();
                 const priority = taskPriority.value;
+                const department = taskDepartment.value;
                 
                 if (description === '') {
-                    alert('Por favor ingresa una descripción para la tarea');
+                    alert('Ingresa una descripción para la tarea');
                     return;
                 }
                 
@@ -417,7 +390,7 @@
                     machine,
                     description,
                     priority,
-                    department: selectedDepartment,
+                    department,
                     completed: false,
                     note: ''
                 };
@@ -428,14 +401,6 @@
                 
                 // Limpiar campos
                 taskDescription.value = '';
-                taskPriority.value = 'Alta';
-                machineLetter.value = 'A';
-                machineNumber.value = '01';
-                
-                // Restablecer departamento
-                departmentBtns.forEach(b => b.classList.remove('active'));
-                departmentBtns[0].classList.add('active');
-                selectedDepartment = 'Eléctrico';
             });
             
             // Renderizar tareas
@@ -443,7 +408,7 @@
                 taskList.innerHTML = '';
                 
                 if (tasks.length === 0) {
-                    taskList.innerHTML = '<p style="text-align: center; color: #95a5a6;">No hay tareas registradas</p>';
+                    taskList.innerHTML = '<p style="text-align: center; color: #95a5a6; font-size: 0.9em;">No hay tareas registradas</p>';
                     return;
                 }
                 
@@ -478,7 +443,7 @@
                     prioritySpan.className = `task-priority priority-${task.priority.toLowerCase()}`;
                     prioritySpan.textContent = task.priority;
                     
-                    // Departamento
+                    // Departamento (solo icono)
                     const departmentSpan = document.createElement('div');
                     departmentSpan.className = 'task-department';
                     
@@ -487,7 +452,7 @@
                     if (task.department === 'Mecánico') departmentIcon = 'cogs';
                     if (task.department === 'Setup') departmentIcon = 'tools';
                     
-                    departmentSpan.innerHTML = `<i class="fas fa-${departmentIcon}"></i> ${task.department}`;
+                    departmentSpan.innerHTML = `<i class="fas fa-${departmentIcon}" title="${task.department}"></i>`;
                     
                     // Acciones
                     const actionsDiv = document.createElement('div');
@@ -497,7 +462,7 @@
                     const noteBtn = document.createElement('button');
                     noteBtn.className = `action-btn note-btn ${task.note ? 'has-note' : ''}`;
                     noteBtn.innerHTML = `<i class="fas fa-comment${task.note ? '-dots' : ''} note-indicator ${task.note ? 'has-note' : ''}"></i>`;
-                    noteBtn.title = 'Agregar/Ver nota';
+                    noteBtn.title = task.note ? 'Ver nota' : 'Agregar nota';
                     noteBtn.addEventListener('click', function() {
                         openNoteModal(index);
                     });
@@ -508,7 +473,7 @@
                     deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
                     deleteBtn.title = 'Eliminar tarea';
                     deleteBtn.addEventListener('click', function() {
-                        if (confirm('¿Estás seguro de eliminar esta tarea?')) {
+                        if (confirm('¿Eliminar esta tarea?')) {
                             tasks.splice(index, 1);
                             saveTasks();
                             renderTasks();
