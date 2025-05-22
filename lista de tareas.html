@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrador de Tareas - Mantenimiento</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .task-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        select, input, button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 14px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .add-task-btn {
+            background-color: #2ecc71;
+            padding: 12px 20px;
+            font-size: 16px;
+        }
+        
+        .add-task-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .task-list {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 10px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .task-machine {
+            display: flex;
+            gap: 5px;
+            min-width: 100px;
+        }
+        
+        .task-description {
+            flex: 2;
+            min-width: 200px;
+            padding: 0 10px;
+        }
+        
+        .task-priority {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .priority-high {
+            background-color: #ffdddd;
+            color: #c0392b;
+            font-weight: bold;
+        }
+        
+        .priority-low {
+            background-color: #ddffdd;
+            color: #27ae60;
+        }
+        
+        .priority-pending {
+            background-color: #ffffdd;
+            color: #f39c12;
+        }
+        
+        .task-department {
+            display: flex;
+            gap: 5px;
+            min-width: 120px;
+        }
+        
+        .department-btn {
+            background: none;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+        
+        .department-btn.active {
+            color: #3498db;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 5px;
+            margin-left: auto;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+        
+        .action-btn:hover {
+            color: #3498db;
+        }
+        
+        .delete-btn:hover {
+            color: #e74c3c;
+        }
+        
+        .completed {
+            opacity: 0.7;
+            background-color: #f9f9f9;
+        }
+        
+        .completed .task-description {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+        
+        /* Estilos para el modal de notas */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+        
+        .note-textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        
+        .save-note-btn {
+            background-color: #2ecc71;
+        }
+        
+        .save-note-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .note-indicator {
+            color: #3498db;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        
+        .note-indicator.has-note {
+            color: #f39c12;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .task-actions {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Administrador de Tareas de Mantenimiento</h1>
+    
+    <div class="task-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="machine-letter">Letra Máquina:</label>
+                <select id="machine-letter">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                    <option value="G">G</option>
+                    <option value="H">H</option>
+                    <option value="I">I</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="machine-number">Número Máquina:</label>
+                <select id="machine-number">
+                    <option value="01">01</option>
+                    <option value="02">02</option>
+                    <option value="03">03</option>
+                    <option value="04">04</option>
+                    <option value="05">05</option>
+                    <option value="06">06</option>
+                    <option value="07">07</option>
+                    <option value="08">08</option>
+                    <option value="09">09</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="task-description">Descripción:</label>
+                <input type="text" id="task-description" placeholder="Descripción de la avería">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="task-priority">Prioridad:</label>
+                <select id="task-priority">
+                    <option value="Alta">Alta</option>
+                    <option value="Baja">Baja</option>
+                    <option value="Pendiente">Pendiente</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Departamento:</label>
+                <div class="department-buttons">
+                    <button type="button" class="department-btn active" data-department="Eléctrico">
+                        <i class="fas fa-bolt"></i> Eléctrico
+                    </button>
+                    <button type="button" class="department-btn" data-department="Mecánico">
+                        <i class="fas fa-cogs"></i> Mecánico
+                    </button>
+                    <button type="button" class="department-btn" data-department="Setup">
+                        <i class="fas fa-tools"></i> Setup
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <button type="button" id="add-task-btn" class="add-task-btn">
+                    <i class="fas fa-plus"></i> Agregar Tarea
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="task-list" id="task-list">
+        <!-- Las tareas se agregarán aquí dinámicamente -->
+    </div>
+    
+    <!-- Modal para notas -->
+    <div id="note-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Notas de la Tarea</h3>
+            <textarea class="note-textarea" id="note-textarea" placeholder="Escribe aquí lo realizado en la máquina..."></textarea>
+            <button type="button" id="save-note-btn" class="save-note-btn">Guardar Nota</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables globales
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            let currentTaskIndex = null;
+            
+            // Elementos del DOM
+            const taskList = document.getElementById('task-list');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const machineLetter = document.getElementById('machine-letter');
+            const machineNumber = document.getElementById('machine-number');
+            const taskDescription = document.getElementById('task-description');
+            const taskPriority = document.getElementById('task-priority');
+            const departmentBtns = document.querySelectorAll('.department-btn');
+            const noteModal = document.getElementById('note-modal');
+            const noteTextarea = document.getElementById('note-textarea');
+            const saveNoteBtn = document.getElementById('save-note-btn');
+            const closeBtn = document.querySelector('.close-btn');
+            
+            // Departamento seleccionado
+            let selectedDepartment = 'Eléctrico';
+            
+            // Event listeners para botones de departamento
+            departmentBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    departmentBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedDepartment = this.getAttribute('data-department');
+                });
+            });
+            
+            // Agregar nueva tarea
+            addTaskBtn.addEventListener('click', function() {
+                const machine = `${machineLetter.value}${machineNumber.value}`;
+                const description = taskDescription.value.trim();
+                const priority = taskPriority.value;
+                
+                if (description === '') {
+                    alert('Por favor ingresa una descripción para la tarea');
+                    return;
+                }
+                
+                const newTask = {
+                    id: Date.now(),
+                    machine,
+                    description,
+                    priority,
+                    department: selectedDepartment,
+                    completed: false,
+                    note: ''
+                };
+                
+                tasks.push(newTask);
+                saveTasks();
+                renderTasks();
+                
+                // Limpiar campos
+                taskDescription.value = '';
+                taskPriority.value = 'Alta';
+                machineLetter.value = 'A';
+                machineNumber.value = '01';
+                
+                // Restablecer departamento
+                departmentBtns.forEach(b => b.classList.remove('active'));
+                departmentBtns[0].classList.add('active');
+                selectedDepartment = 'Eléctrico';
+            });
+            
+            // Renderizar tareas
+            function renderTasks() {
+                taskList.innerHTML = '';
+                
+                if (tasks.length === 0) {
+                    taskList.innerHTML = '<p style="text-align: center; color: #95a5a6;">No hay tareas registradas</p>';
+                    return;
+                }
+                
+                tasks.forEach((task, index) => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = `task-item ${task.completed ? 'completed' : ''}`;
+                    taskItem.dataset.id = task.id;
+                    
+                    // Checkbox
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'task-checkbox';
+                    checkbox.checked = task.completed;
+                    checkbox.addEventListener('change', function() {
+                        task.completed = this.checked;
+                        saveTasks();
+                        renderTasks();
+                    });
+                    
+                    // Máquina
+                    const machineSpan = document.createElement('div');
+                    machineSpan.className = 'task-machine';
+                    machineSpan.textContent = task.machine;
+                    
+                    // Descripción
+                    const descriptionSpan = document.createElement('div');
+                    descriptionSpan.className = 'task-description';
+                    descriptionSpan.textContent = task.description;
+                    
+                    // Prioridad
+                    const prioritySpan = document.createElement('div');
+                    prioritySpan.className = `task-priority priority-${task.priority.toLowerCase()}`;
+                    prioritySpan.textContent = task.priority;
+                    
+                    // Departamento
+                    const departmentSpan = document.createElement('div');
+                    departmentSpan.className = 'task-department';
+                    
+                    let departmentIcon = '';
+                    if (task.department === 'Eléctrico') departmentIcon = 'bolt';
+                    if (task.department === 'Mecánico') departmentIcon = 'cogs';
+                    if (task.department === 'Setup') departmentIcon = 'tools';
+                    
+                    departmentSpan.innerHTML = `<i class="fas fa-${departmentIcon}"></i> ${task.department}`;
+                    
+                    // Acciones
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'task-actions';
+                    
+                    // Botón de nota
+                    const noteBtn = document.createElement('button');
+                    noteBtn.className = `action-btn note-btn ${task.note ? 'has-note' : ''}`;
+                    noteBtn.innerHTML = `<i class="fas fa-comment${task.note ? '-dots' : ''} note-indicator ${task.note ? 'has-note' : ''}"></i>`;
+                    noteBtn.title = 'Agregar/Ver nota';
+                    noteBtn.addEventListener('click', function() {
+                        openNoteModal(index);
+                    });
+                    
+                    // Botón de eliminar
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'action-btn delete-btn';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteBtn.title = 'Eliminar tarea';
+                    deleteBtn.addEventListener('click', function() {
+                        if (confirm('¿Estás seguro de eliminar esta tarea?')) {
+                            tasks.splice(index, 1);
+                            saveTasks();
+                            renderTasks();
+                        }
+                    });
+                    
+                    actionsDiv.appendChild(noteBtn);
+                    actionsDiv.appendChild(deleteBtn);
+                    
+                    // Construir el elemento de tarea
+                    taskItem.appendChild(checkbox);
+                    taskItem.appendChild(machineSpan);
+                    taskItem.appendChild(descriptionSpan);
+                    taskItem.appendChild(prioritySpan);
+                    taskItem.appendChild(departmentSpan);
+                    taskItem.appendChild(actionsDiv);
+                    
+                    taskList.appendChild(taskItem);
+                });
+            }
+            
+            // Abrir modal de notas
+            function openNoteModal(index) {
+                currentTaskIndex = index;
+                noteTextarea.value = tasks[index].note || '';
+                noteModal.style.display = 'block';
+            }
+            
+            // Cerrar modal de notas
+            closeBtn.addEventListener('click', function() {
+                noteModal.style.display = 'none';
+            });
+            
+            // Guardar nota
+            saveNoteBtn.addEventListener('click', function() {
+                if (currentTaskIndex !== null) {
+                    tasks[currentTaskIndex].note = noteTextarea.value.trim();
+                    saveTasks();
+                    renderTasks();
+                    noteModal.style.display = 'none';
+                    
+                    // Mostrar alerta si hay nota
+                    if (tasks[currentTaskIndex].note) {
+                        alert(`Nota para ${tasks[currentTaskIndex].machine}:\n\n${tasks[currentTaskIndex].note}`);
+                    }
+                }
+            });
+            
+            // Cerrar modal al hacer clic fuera
+            window.addEventListener('click', function(event) {
+                if (event.target === noteModal) {
+                    noteModal.style.display = 'none';
+                }
+            });
+            
+            // Guardar tareas en localStorage
+            function saveTasks() {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+            
+            // Inicializar la aplicación
+            renderTasks();
+        });
+    </script>
+</body>
+</html>
