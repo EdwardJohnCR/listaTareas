@@ -129,9 +129,11 @@ button:hover {
     padding: 3px 6px;
     border-radius: 3px;
     font-weight: 600;
-    min-width: 60px;
+    min-width: 50px !important;
+    /* Aumentado de 60px */
     text-align: center;
-    font-size: 0.9em;
+    font-size: 0.8em !important;
+    /* Aumentado de 0.8em */
 }
 
 .priority-high {
@@ -299,21 +301,39 @@ button:hover {
     margin-left: 3px;
 }
 
-.task-status, .task-department-select {
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.85em;
-    min-width: 100px;
+.task-status {
+    padding: 4px 6px !important;
+    font-size: 0.8em !important;
+    min-width: 85px !important;
+    height: 28px;
+}
+
+/* Selector de Departamento - Más compacto */
+.task-department-select {
+    padding: 4px 6px !important;
+    font-size: 0.8em !important;
+    min-width: 75px !important;
+    height: 28px;
 }
 
 .task-department-select {
-    min-width: 80px !important;
+    min-width: 60px !important;
     font-size: 0.8em !important;
+}
+    
+/* Ajuste para mantener alineación vertical */
+.task-item {
+    align-items: center;
 }
 
 /* Responsive */
+/* Ajuste responsive para móviles */
 @media (max-width: 600px) {
+    .task-status, .task-department-select {
+        min-width: 70px !important;
+        font-size: 0.75em !important;
+    }
+}
     body {
         padding: 10px;
         font-size: 13px;
@@ -340,6 +360,8 @@ button:hover {
         order: 1;
         margin-top: 5px;
         padding-left: 25px;
-        font-size: 1em;
+        font-size: 1.1em !important;
+        /* Aumentado de 0.9em/1.05em */
+        line-height: 1.5 !important;
     }
 }

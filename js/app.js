@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tasks.push(newTask);
         saveTasks();
         renderTasks();
-        
+
         // Guardar automáticamente en la base de datos
         try {
             await saveTaskToDB(newTask);
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
             taskList.innerHTML = '<p style="text-align: center; color: #95a5a6; font-size: 0.9em;">No hay tareas registradas</p>';
             return;
         }
-        
+
         tasks.slice().reverse().forEach((task, index) => {
             // Determinar la clase de prioridad para la fila completa
             let priorityClass = '';
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <option value="Revicion" ${task.status === 'Revicion' ? 'selected' : ''}>Revisión</option>
                 <option value="Finalizada" ${task.status === 'Finalizada' ? 'selected' : ''}>Finalizada</option>
             `;
-            statusSelect.addEventListener('change', async function() {
+            statusSelect.addEventListener('change', async function () {
                 task.status = this.value;
                 if (this.value === 'Finalizada') {
                     task.completed = true;
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <option value="Mecánico" ${task.department === 'Mecánico' ? 'selected' : ''}>Mecánico</option>
                 <option value="Setup" ${task.department === 'Setup' ? 'selected' : ''}>Setup</option>
             `;
-            departmentSelect.addEventListener('change', async function() {
+            departmentSelect.addEventListener('change', async function () {
                 task.department = this.value;
                 saveTasks();
                 await saveTaskToDB(task).catch(console.error);
@@ -196,13 +196,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     const taskId = task.id;
                     tasks.splice(tasks.length - 1 - index, 1);
                     saveTasks();
-                    
+
                     try {
                         await deleteTaskFromDB(taskId);
                     } catch (error) {
                         console.error('Error al eliminar tarea:', error);
                     }
-                    
+
                     renderTasks();
                 }
             });
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
         currentTaskIndex = index;
         const task = tasks[tasks.length - 1 - index];
         const notes = task.notes ? task.notes.split('\n---\n') : [''];
-        
+
         noteTextarea.value = notes.join('\n\n---\n\n');
         noteModal.style.display = 'block';
     }
@@ -270,13 +270,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const task = tasks[tasks.length - 1 - currentTaskIndex];
             task.notes = noteTextarea.value.trim();
             saveTasks();
-            
+
             try {
                 await saveTaskToDB(task);
             } catch (error) {
                 console.error('Error al guardar nota:', error);
             }
-            
+
             renderTasks();
             noteModal.style.display = 'none';
         }
@@ -297,3 +297,32 @@ document.addEventListener('DOMContentLoaded', function () {
     // Inicializar la aplicación
     renderTasks();
 });
+
+// Reemplaza la inicialización al final del archivo:
+    async function initApp() {
+        try {
+            const response = await fetch('https://ttscr.com/ls/api/get_tasks.php', {
+                headers: {
+                    'Authorization': 'Basic ' + btoa('u310879082_lisTa_User:|6+Ai1s&m?aQ')
+                }
+            });
+            if (response.ok) {
+                tasks = await response.json();
+            }
+        } catch (error) {
+            console.error('Error al cargar tareas:', error);
+        }
+
+        // Cargar desde localStorage como fallback
+        const localTasks = JSON.parse(localStorage.getItem('tasks'));
+        if (!tasks.length && localTasks) {
+            tasks = localTasks;
+        }
+
+        renderTasks();
+    }
+
+    // Cambia la última línea de:
+    // renderTasks();
+    // a:
+    initApp();
