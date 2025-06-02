@@ -1,8 +1,6 @@
 <?php
 require_once 'config.php';
 
-header('Content-Type: application/json');
-
 // Verificar autenticación básica
 if (!isset($_SERVER['PHP_AUTH_USER']) || 
     !isset($_SERVER['PHP_AUTH_PW']) || 
@@ -16,51 +14,49 @@ if (!isset($_SERVER['PHP_AUTH_USER']) ||
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!$data || !isset($data['tasks'])) {
+if (!$data) {
     http_response_code(400);
     echo json_encode(['message' => 'Datos inválidos']);
     exit;
 }
 
 try {
-    $conn->begin_transaction();
+    $query = "INSERT INTO tasks (id, machine, description, priority, department, status, notes, completed, created_at) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
+              ON DUPLICATE KEY UPDATE 
+              machine = VALUES(machine),
+              description = VALUES(description),
+              priority = VALUES(priority),
+              department = VALUES(department),
+              status = VALUES(status),
+              notes = VALUES(notes),
+              completed = VALUES(completed),
+              updated_at = CURRENT_TIMESTAMP";
     
-    // Limpiar tabla existente
-    $conn->query('TRUNCATE TABLE tasks');
-    
-    // Preparar declaración para insertar
-    $stmt = $conn->prepare(
-        'INSERT INTO tasks (machine, description, priority, department, status, notes, completed, created_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param(
+        'issssssis',
+        $data['id'],
+        $data['machine'],
+        $data['description'],
+        $data['priority'],
+        $data['department'],
+        $data['status'],
+        $data['notes'],
+        $data['completed'],
+        $data['createdAt']
     );
     
-    foreach ($data['tasks'] as $task) {
-        $createdAt = isset($task['createdAt']) ? $task['createdAt'] : date('Y-m-d H:i:s');
-        $stmt->bind_param(
-            'ssssssis',
-            $task['machine'],
-            $task['description'],
-            $task['priority'],
-            $task['department'],
-            $task['status'],
-            $task['notes'],
-            $task['completed'],
-            $createdAt
-        );
-        $stmt->execute();
-    }
-    
-    $conn->commit();
+    $stmt->execute();
     
     echo json_encode([
-        'message' => 'Tareas guardadas exitosamente',
-        'count' => count($data['tasks'])
+        'message' => 'Tarea guardada exitosamente',
+        'id' => $data['id']
     ]);
 } catch (Exception $e) {
-    $conn->rollback();
     http_response_code(500);
     echo json_encode([
-        'message' => 'Error al guardar tareas',
+        'message' => 'Error al guardar tarea',
         'error' => $e->getMessage()
     ]);
 }

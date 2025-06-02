@@ -1,3 +1,4 @@
+/* Estilos generales */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 800px;
@@ -15,6 +16,7 @@ h1 {
     font-size: 1.5em;
 }
 
+/* Formulario */
 .task-form {
     background-color: white;
     padding: 15px;
@@ -34,6 +36,11 @@ h1 {
 .form-group {
     flex: 1;
     min-width: 120px;
+}
+
+.department-group {
+    min-width: 90px !important;
+    flex: none !important;
 }
 
 label {
@@ -77,6 +84,7 @@ button:hover {
     background-color: #27ae60;
 }
 
+/* Lista de tareas */
 .task-list {
     background-color: white;
     border-radius: 6px;
@@ -87,7 +95,7 @@ button:hover {
 .task-item {
     display: flex;
     align-items: center;
-    padding: 10px 5px;
+    padding: 12px 8px;
     border-bottom: 1px solid #eee;
     gap: 8px;
 }
@@ -106,13 +114,15 @@ button:hover {
 .task-machine {
     min-width: 50px;
     font-weight: 600;
+    font-size: 1.05em;
 }
 
 .task-description {
     flex: 2;
     min-width: 150px;
     padding: 0 5px;
-    font-size: 0.9em;
+    font-size: 1.05em;
+    line-height: 1.4;
 }
 
 .task-priority {
@@ -121,7 +131,7 @@ button:hover {
     font-weight: 600;
     min-width: 60px;
     text-align: center;
-    font-size: 0.8em;
+    font-size: 0.9em;
 }
 
 .priority-high {
@@ -143,6 +153,7 @@ button:hover {
     min-width: 20px;
     text-align: center;
     color: #7f8c8d;
+    font-size: 0.9em;
 }
 
 .task-actions {
@@ -169,7 +180,7 @@ button:hover {
 }
 
 .completed {
-    opacity: 0.6;
+    opacity: 0.7;
     background-color: #f9f9f9;
 }
 
@@ -178,6 +189,7 @@ button:hover {
     color: #95a5a6;
 }
 
+/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -240,7 +252,7 @@ button:hover {
     color: #4b6f71;
 }
 
-/* Estilos para las filas según prioridad */
+/* Estilos para estados */
 .task-item.high-priority {
     background-color: #ffebee;
     border-left: 3px solid #f44336;
@@ -256,7 +268,6 @@ button:hover {
     border-left: 3px solid #ffeb3b;
 }
 
-/* Estilos para estados */
 .task-item.status-process {
     border-left: 3px solid #3498db;
 }
@@ -288,15 +299,20 @@ button:hover {
     margin-left: 3px;
 }
 
-.task-status,
-.task-department {
+.task-status, .task-department-select {
     padding: 5px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 0.8em;
+    font-size: 0.85em;
     min-width: 100px;
 }
 
+.task-department-select {
+    min-width: 80px !important;
+    font-size: 0.8em !important;
+}
+
+/* Responsive */
 @media (max-width: 600px) {
     body {
         padding: 10px;
@@ -311,6 +327,10 @@ button:hover {
         min-width: 100px;
     }
 
+    .department-group {
+        min-width: 80px !important;
+    }
+
     .task-item {
         flex-wrap: wrap;
     }
@@ -320,30 +340,6 @@ button:hover {
         order: 1;
         margin-top: 5px;
         padding-left: 25px;
-    }
-
-    .save-db-btn {
-        background-color: #3498db;
-        color: white;
-        padding: 10px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9em;
-        margin-top: 10px;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        transition: background-color 0.3s;
-    }
-
-    .save-db-btn:hover {
-        background-color: #2980b9;
-    }
-
-    .save-db-btn i {
-        font-size: 1.1em;
+        font-size: 1em;
     }
 }
