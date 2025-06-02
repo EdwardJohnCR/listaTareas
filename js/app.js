@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
             taskList.innerHTML = '<p style="text-align: center; color: #95a5a6; font-size: 0.9em;">No hay tareas registradas</p>';
             return;
         }
-        
+
         tasks.slice().reverse().forEach((task, index) => {
             // Determinar la clase de prioridad para la fila completa
             let priorityClass = '';
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <option value="Revicion" ${task.status === 'Revicion' ? 'selected' : ''}>Revisión</option>
                 <option value="Finalizada" ${task.status === 'Finalizada' ? 'selected' : ''}>Finalizada</option>
             `;
-            statusSelect.addEventListener('change', function() {
+            statusSelect.addEventListener('change', function () {
                 task.status = this.value;
                 if (this.value === 'Finalizada') {
                     task.completed = true;
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <option value="Mecánico" ${task.department === 'Mecánico' ? 'selected' : ''}>Mecánico</option>
                 <option value="Setup" ${task.department === 'Setup' ? 'selected' : ''}>Setup</option>
             `;
-            departmentSelect.addEventListener('change', function() {
+            departmentSelect.addEventListener('change', function () {
                 task.department = this.value;
                 saveTasks();
             });
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
         currentTaskIndex = index;
         const task = tasks[tasks.length - 1 - index];
         const notes = task.notes ? task.notes.split('\n---\n') : [''];
-        
+
         noteTextarea.value = notes.join('\n\n---\n\n');
         noteModal.style.display = 'block';
     }
@@ -207,6 +207,40 @@ document.addEventListener('DOMContentLoaded', function () {
             noteModal.style.display = 'none';
         }
     });
+
+    // Función para guardar en la base de datos
+    async function saveToDatabase() {
+        try {
+            const response = await fetch('https://ttscr.com/ls/api/save_tasks.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tasks: tasks,
+                    auth: {
+                        user: 'u310879082_lisTa_User',
+                        pass: '|6+Ai1s&m?aQ'
+                    }
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('Tareas guardadas exitosamente en la base de datos');
+                console.log('Resultado:', result);
+            } else {
+                throw new Error(result.message || 'Error al guardar en la base de datos');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al guardar en la base de datos: ' + error.message);
+        }
+    }
+
+    // Event listener para el botón de guardar
+    document.getElementById('save-db-btn').addEventListener('click', saveToDatabase);
 
     // Cerrar modal al hacer clic fuera
     window.addEventListener('click', function (event) {

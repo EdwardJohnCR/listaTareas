@@ -288,7 +288,8 @@ button:hover {
     margin-left: 3px;
 }
 
-.task-status, .task-department {
+.task-status,
+.task-department {
     padding: 5px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -319,5 +320,30 @@ button:hover {
         order: 1;
         margin-top: 5px;
         padding-left: 25px;
+    }
+
+    .save-db-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        margin-top: 10px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background-color 0.3s;
+    }
+
+    .save-db-btn:hover {
+        background-color: #2980b9;
+    }
+
+    .save-db-btn i {
+        font-size: 1.1em;
     }
 }
