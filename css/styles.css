@@ -388,3 +388,6 @@ button:hover {
     background-color: #ECEFF1 !important;
     border-left: 3px solid #607D8B !important;
 }
+.task-item {
+    transition: all 0.3s ease;
+}
