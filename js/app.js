@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         tasks.slice().reverse().forEach((task, index) => {
+
             // Determinar la clase de prioridad para la fila completa
             let priorityClass = '';
             if (task.priority === 'Alta') priorityClass = 'high-priority';
@@ -99,14 +100,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Determinar clase de estado
             let statusClass = '';
-            if (task.status === 'Proceso') statusClass = 'status-process';
-            else if (task.status === 'Detenida') statusClass = 'status-stopped';
-            else if (task.status === 'Revicion') statusClass = 'status-review';
-            else if (task.status === 'Finalizada') statusClass = 'status-finished';
+            switch (task.status.toLowerCase()) {
+                case 'proceso':
+                    statusClass = 'status-proceso';
+                    break;
+                case 'detenida':
+                    statusClass = 'status-detenida';
+                    break;
+                case 'revicion':
+                    statusClass = 'status-revicion';
+                    break;
+                case 'finalizada':
+                    statusClass = 'status-finalizada';
+                    break;
+                default:
+                    statusClass = 'status-pendiente';
+            }
 
             const taskItem = document.createElement('div');
-            taskItem.className = `task-item ${priorityClass} ${statusClass} ${task.completed ? 'completed' : ''}`;
-            taskItem.dataset.id = task.id;
+            taskItem.className = `task-item ${priorityClass} ${statusClass} ${task.completed ? 'completed' :
 
             // Número de tarea
             const taskNumber = document.createElement('div');
@@ -156,10 +168,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 task.status = this.value;
                 if (this.value === 'Finalizada') {
                     task.completed = true;
+                } else {
+                    task.completed = false;
                 }
                 saveTasks();
                 await saveTaskToDB(task).catch(console.error);
-                renderTasks();
+                renderTasks(); // Esto aplicará los nuevos estilos
             });
 
             // Departamento (dropdown más pequeño)
@@ -223,6 +237,9 @@ document.addEventListener('DOMContentLoaded', function () {
             taskItem.appendChild(actionsDiv);
 
             taskList.appendChild(taskItem);
+
+
+
         });
     }
 
@@ -299,30 +316,30 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // Reemplaza la inicialización al final del archivo:
-    async function initApp() {
-        try {
-            const response = await fetch('https://ttscr.com/ls/api/get_tasks.php', {
-                headers: {
-                    'Authorization': 'Basic ' + btoa('u310879082_lisTa_User:|6+Ai1s&m?aQ')
-                }
-            });
-            if (response.ok) {
-                tasks = await response.json();
+async function initApp() {
+    try {
+        const response = await fetch('https://ttscr.com/ls/api/get_tasks.php', {
+            headers: {
+                'Authorization': 'Basic ' + btoa('u310879082_lisTa_User:|6+Ai1s&m?aQ')
             }
-        } catch (error) {
-            console.error('Error al cargar tareas:', error);
+        });
+        if (response.ok) {
+            tasks = await response.json();
         }
-
-        // Cargar desde localStorage como fallback
-        const localTasks = JSON.parse(localStorage.getItem('tasks'));
-        if (!tasks.length && localTasks) {
-            tasks = localTasks;
-        }
-
-        renderTasks();
+    } catch (error) {
+        console.error('Error al cargar tareas:', error);
     }
 
-    // Cambia la última línea de:
-    // renderTasks();
-    // a:
-    initApp();
+    // Cargar desde localStorage como fallback
+    const localTasks = JSON.parse(localStorage.getItem('tasks'));
+    if (!tasks.length && localTasks) {
+        tasks = localTasks;
+    }
+
+    renderTasks();
+}
+
+// Cambia la última línea de:
+// renderTasks();
+// a:
+initApp();

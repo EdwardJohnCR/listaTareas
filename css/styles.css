@@ -356,3 +356,35 @@ button:hover {
         /* Aumentado de 0.9em/1.05em */
         line-height: 1.5 !important;
     }
+/* Colores para cada estado */
+.task-item.status-pendiente {
+    border-left: 3px solid #FFC107; /* Amarillo para Pendiente */
+    background-color: #FFF8E1;
+}
+
+.task-item.status-proceso {
+    border-left: 3px solid #2196F3; /* Azul para Proceso */
+    background-color: #E3F2FD;
+}
+
+.task-item.status-detenida {
+    border-left: 3px solid #F44336; /* Rojo para Detenida */
+    background-color: #FFEBEE;
+}
+
+.task-item.status-revicion {
+    border-left: 3px solid #FF9800; /* Naranja para Revisión */
+    background-color: #FFF3E0;
+}
+
+.task-item.status-finalizada {
+    border-left: 3px solid #4CAF50; /* Verde para Finalizada */
+    background-color: #E8F5E9;
+}
+
+/* Para tareas completadas */
+.task-item.completed {
+    opacity: 0.8;
+    background-color: #ECEFF1 !important;
+    border-left: 3px solid #607D8B !important;
+}
