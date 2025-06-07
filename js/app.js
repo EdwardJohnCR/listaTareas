@@ -44,19 +44,16 @@ document.addEventListener('DOMContentLoaded', function () {
         saveTasks();
         renderTasks();
 
-        // Guardar automáticamente en la base de datos
         try {
             await saveTaskToDB(newTask);
         } catch (error) {
             console.error('Error al guardar en la base de datos:', error);
         }
 
-        // Limpiar campos
         taskDescription.value = '';
         taskDescription.focus();
     });
 
-    // Función para guardar en la base de datos
     async function saveTaskToDB(task) {
         try {
             const response = await fetch('https://ttscr.com/ls/api/save_task.php', {
@@ -81,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Renderizar tareas
     function renderTasks() {
         taskList.innerHTML = '';
 
@@ -91,16 +87,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         tasks.slice().reverse().forEach((task, index) => {
-
-            // Determinar la clase de prioridad para la fila completa
             let priorityClass = '';
             if (task.priority === 'Alta') priorityClass = 'high-priority';
             else if (task.priority === 'Pendiente') priorityClass = 'pending-priority';
             else if (task.priority === 'Baja') priorityClass = 'low-priority';
 
-            // Determinar clase de estado
             let statusClass = '';
-            switch (task.status.toLowerCase()) {
+            switch(task.status.toLowerCase()) {
                 case 'proceso':
                     statusClass = 'status-proceso';
                     break;
@@ -118,15 +111,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const taskItem = document.createElement('div');
-            taskItem.className = `task-item ${priorityClass} ${statusClass} ${task.completed ? 'completed' :
+            taskItem.className = `task-item ${priorityClass} ${statusClass} ${task.completed ? 'completed' : ''}`;
 
-            // Número de tarea
             const taskNumber = document.createElement('div');
             taskNumber.className = 'task-number';
             taskNumber.textContent = (tasks.length - index) + '.';
             taskItem.appendChild(taskNumber);
 
-            // Checkbox
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'task-checkbox';
@@ -139,22 +130,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderTasks();
             });
 
-            // Máquina
             const machineSpan = document.createElement('div');
             machineSpan.className = 'task-machine';
             machineSpan.textContent = task.machine;
 
-            // Descripción (texto más grande)
             const descriptionSpan = document.createElement('div');
             descriptionSpan.className = 'task-description';
             descriptionSpan.textContent = task.description;
 
-            // Prioridad
             const prioritySpan = document.createElement('div');
             prioritySpan.className = `task-priority priority-${task.priority.toLowerCase()}`;
             prioritySpan.textContent = task.priority;
 
-            // Estado (dropdown)
             const statusSelect = document.createElement('select');
             statusSelect.className = 'task-status';
             statusSelect.innerHTML = `
@@ -173,10 +160,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 saveTasks();
                 await saveTaskToDB(task).catch(console.error);
-                renderTasks(); // Esto aplicará los nuevos estilos
+                renderTasks();
             });
 
-            // Departamento (dropdown más pequeño)
             const departmentSelect = document.createElement('select');
             departmentSelect.className = 'task-department-select';
             departmentSelect.innerHTML = `
@@ -190,7 +176,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 await saveTaskToDB(task).catch(console.error);
             });
 
-            // Botón de nota con contador
             const noteBtn = document.createElement('button');
             noteBtn.className = `action-btn note-btn ${task.notes ? 'has-note' : ''}`;
             const noteCount = task.notes ? task.notes.split('\n---\n').length : 0;
@@ -200,7 +185,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 openNoteModal(index);
             });
 
-            // Botón de eliminar
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'action-btn delete-btn';
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
@@ -221,13 +205,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // Acciones
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'task-actions';
             actionsDiv.appendChild(noteBtn);
             actionsDiv.appendChild(deleteBtn);
 
-            // Construir el elemento de tarea
             taskItem.appendChild(checkbox);
             taskItem.appendChild(machineSpan);
             taskItem.appendChild(descriptionSpan);
@@ -237,13 +219,9 @@ document.addEventListener('DOMContentLoaded', function () {
             taskItem.appendChild(actionsDiv);
 
             taskList.appendChild(taskItem);
-
-
-
         });
     }
 
-    // Función para eliminar tarea de la base de datos
     async function deleteTaskFromDB(taskId) {
         try {
             const response = await fetch(`https://ttscr.com/ls/api/delete_task.php?id=${taskId}`, {
@@ -266,7 +244,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Abrir modal de notas
     function openNoteModal(index) {
         currentTaskIndex = index;
         const task = tasks[tasks.length - 1 - index];
@@ -276,12 +253,10 @@ document.addEventListener('DOMContentLoaded', function () {
         noteModal.style.display = 'block';
     }
 
-    // Cerrar modal de notas
     closeBtn.addEventListener('click', function () {
         noteModal.style.display = 'none';
     });
 
-    // Guardar nota
     saveNoteBtn.addEventListener('click', async function () {
         if (currentTaskIndex !== null) {
             const task = tasks[tasks.length - 1 - currentTaskIndex];
@@ -299,47 +274,43 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Cerrar modal al hacer clic fuera
     window.addEventListener('click', function (event) {
         if (event.target === noteModal) {
             noteModal.style.display = 'none';
         }
     });
 
-    // Guardar tareas en localStorage
     function saveTasks() {
         localStorage.setItem('tasks', JSON.stringify(tasks));
     }
 
-    // Inicializar la aplicación
-    renderTasks();
-});
-
-// Reemplaza la inicialización al final del archivo:
-async function initApp() {
-    try {
-        const response = await fetch('https://ttscr.com/ls/api/get_tasks.php', {
-            headers: {
-                'Authorization': 'Basic ' + btoa('u310879082_lisTa_User:|6+Ai1s&m?aQ')
+    // Función para inicializar cargando tareas del servidor
+    async function initApp() {
+        try {
+            const response = await fetch('https://ttscr.com/ls/api/get_tasks.php', {
+                headers: {
+                    'Authorization': 'Basic ' + btoa('u310879082_lisTa_User:|6+Ai1s&m?aQ')
+                }
+            });
+            if (response.ok) {
+                const serverTasks = await response.json();
+                if (serverTasks && serverTasks.length > 0) {
+                    tasks = serverTasks;
+                    saveTasks();
+                }
             }
-        });
-        if (response.ok) {
-            tasks = await response.json();
+        } catch (error) {
+            console.error('Error al cargar tareas:', error);
+            // Cargar desde localStorage como fallback
+            const localTasks = JSON.parse(localStorage.getItem('tasks'));
+            if (localTasks) {
+                tasks = localTasks;
+            }
         }
-    } catch (error) {
-        console.error('Error al cargar tareas:', error);
+
+        renderTasks();
     }
 
-    // Cargar desde localStorage como fallback
-    const localTasks = JSON.parse(localStorage.getItem('tasks'));
-    if (!tasks.length && localTasks) {
-        tasks = localTasks;
-    }
-
-    renderTasks();
-}
-
-// Cambia la última línea de:
-// renderTasks();
-// a:
-initApp();
+    // Iniciar la aplicación
+    initApp();
+});
