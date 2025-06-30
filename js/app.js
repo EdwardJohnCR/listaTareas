@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cargar las tareas al iniciar la página
     const loadTasks = async () => {
         try {
-            const response = await fetch('get_tasks.php');
+            const response = await fetch('api/get_tasks.php');
             const tasks = await response.json();
             taskList.innerHTML = ''; // Limpiar la lista antes de renderizar
             tasks.forEach(renderTask);
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (taskName === '') return;
 
         try {
-            const response = await fetch('save_tasks.php', {
+            const response = await fetch('api/save_tasks.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ task_name: taskName }),
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Eliminar una tarea
     const deleteTask = async (taskId) => {
         try {
-            const response = await fetch('delete_task.php', {
+            const response = await fetch('api/delete_task.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: taskId }),
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Marcar una tarea como completada o no
     const toggleComplete = async (taskId, isCompleted) => {
          try {
-            const response = await fetch('update_task.php', {
+            const response = await fetch('api/update_task.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: taskId, is_completed: isCompleted }),
