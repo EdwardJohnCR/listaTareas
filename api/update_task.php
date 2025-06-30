@@ -1,20 +1,21 @@
 <?php
-require 'config.php';
+header('Content-Type: application/json');
+require_once 'config.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
-$taskId = $data['id'];
-$isCompleted = $data['is_completed'];
+$taskId = isset($data['id']) ? (int)$data['id'] : 0;
+// Verifica si 'is_completed' existe en los datos
+$isCompleted = isset($data['is_completed']) ? (bool)$data['is_completed'] : false;
 
-if (isset($taskId) && isset($isCompleted)) {
+if ($taskId > 0) {
     $stmt = $conn->prepare("UPDATE tasks SET is_completed = ? WHERE id = ?");
-    // Convertimos el booleano a entero (0 o 1) para la base de datos
-    $completedValue = $isCompleted ? 1 : 0;
+    $completedValue = $isCompleted ? 1 : 0; // Convertir booleano a 1 o 0 para la BD
     $stmt->bind_param("ii", $completedValue, $taskId);
 
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Error al actualizar la tarea.']);
+        echo json_encode(['success' => false, 'message' => 'Error al actualizar.']);
     }
     $stmt->close();
 } else {
