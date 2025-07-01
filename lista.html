@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,10 +8,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
+
+<script src="js/app.js"></script>
+
 <body>
     <div class="container">
         <header class="app-header">
-           <img src="./img/logoText.png" alt="Logo" class="header-logo">
+            <img src="./img/logoText.png" alt="Logo" class="header-logo">
             <h1>Lista de Averías</h1>
         </header>
 
@@ -19,8 +24,15 @@
                 <div class="form-group">
                     <label for="machine-letter">Linea:</label>
                     <select id="machine-letter">
-                        <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
-                        <option>F</option><option>G</option><option>H</option><option>I</option>
+                        <option>A</option>
+                        <option>B</option>
+                        <option>C</option>
+                        <option>D</option>
+                        <option>E</option>
+                        <option>F</option>
+                        <option>G</option>
+                        <option>H</option>
+                        <option>I</option>
                     </select>
                 </div>
 
@@ -44,12 +56,12 @@
                         <option value="15">15</option>
                     </select>
                 </div>
-                
-                <div class="form-group-separator"></div> 
+
+                <div class="form-group-separator"></div>
 
                 <div class="form-group">
                     <label for="task-priority">Prioridad:</label>
-                     <select id="task-priority">
+                    <select id="task-priority">
                         <option value="Pendiente">Pendiente</option>
                         <option value="Alta">Alta</option>
                         <option value="Baja">Baja</option>
@@ -76,9 +88,8 @@
         </div>
 
         <div id="task-list" class="task-list-container">
-            </div>
+        </div>
     </div>
-
     <div id="note-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
@@ -91,4 +102,5 @@
 
     <script src="js/app.js"></script>
 </body>
+
 </html>
