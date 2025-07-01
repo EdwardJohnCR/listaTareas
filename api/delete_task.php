@@ -1,23 +1,33 @@
 <?php
-header('Content-Type: application/json');
+header("Content-Type: application/json; charset=UTF-8");
 require_once 'config.php';
 
-$data = json_decode(file_get_contents('php://input'), true);
-$taskId = isset($data['id']) ? (int)$data['id'] : 0;
+try {
+    // Autenticación...
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+    if (!$authHeader) throw new Exception('No autorizado', 401);
+    list($type, $credentials) = explode(' ', $authHeader, 2);
+    $decodedCredentials = base64_decode($credentials);
+    list($user, $pass) = explode(':', $decodedCredentials, 2);
+    if ($user !== DB_USER || $pass !== DB_PASS) throw new Exception('Credenciales incorrectas', 401);
 
-if ($taskId > 0) {
-    $stmt = $conn->prepare("DELETE FROM tasks WHERE id = ?");
-    $stmt->bind_param("i", $taskId);
+    // Lógica para eliminar...
+    $data = json_decode(file_get_contents("php://input"));
+    if (empty($data->id)) throw new Exception('ID de tarea requerido', 400);
+
+    $query = "DELETE FROM tasks WHERE id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $data->id);
 
     if ($stmt->execute()) {
-        echo json_encode(['success' => true]);
+        echo json_encode(["message" => "Tarea eliminada"]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Error al eliminar.']);
+        throw new Exception("Error al eliminar: " . $stmt->error);
     }
-    $stmt->close();
-} else {
-    echo json_encode(['success' => false, 'message' => 'ID de tarea no válido.']);
-}
 
-$conn->close();
+} catch (Exception $e) {
+    $code = $e->getCode() ?: 500;
+    http_response_code($code);
+    echo json_encode(["message" => $e->getMessage()]);
+}
 ?>

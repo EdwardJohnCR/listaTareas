@@ -1,124 +1,94 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bridgestone Task List</title>
+    <title>Lista de Averías</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-
 <body>
-    <h1>Tareas de Mantenimiento</h1>
-    <div style="
-    background-image: url('./img/bridgestoneLogo.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 30%;
-    opacity: 0.1;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;">
-        
-    </div>
+    <div class="container">
+        <header class="app-header">
+           <img src="./img/logoText.png" alt="Logo" class="header-logo">
+            <h1>Lista de Averías</h1>
+        </header>
 
-    <div class="task-form">
-        <div class="form-row">
-            <div class="form-group">
-                <label for="machine-letter">Linea:</label>
-                <select id="machine-letter">
-                    <option value="A">A</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
-                    <option value="D">D</option>
-                    <option value="E">E</option>
-                    <option value="F">F</option>
-                    <option value="G">G</option>
-                    <option value="H">H</option>
-                    <option value="I">I</option>
-                </select>
-            </div>
+        <div class="task-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="machine-letter">Linea:</label>
+                    <select id="machine-letter">
+                        <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+                        <option>F</option><option>G</option><option>H</option><option>I</option>
+                    </select>
+                </div>
 
-            <div class="form-group">
-                <label for="machine-number">Número:</label>
-                <select id="machine-number">
-                    <option value="01">01</option>
-                    <option value="02">02</option>
-                    <option value="03">03</option>
-                    <option value="04">04</option>
-                    <option value="05">05</option>
-                    <option value="06">06</option>
-                    <option value="07">07</option>
-                    <option value="08">08</option>
-                    <option value="09">09</option>
-                    <option value="10">10</option>
-                    <option value="11">11</option>
-                    <option value="12">12</option>
-                    <option value="13">13</option>
-                    <option value="14">14</option>
-                    <option value="15">15</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label for="machine-number">Número:</label>
+                    <select id="machine-number">
+                        <option value="01">01</option>
+                        <option value="02">02</option>
+                        <option value="03">03</option>
+                        <option value="04">04</option>
+                        <option value="05">05</option>
+                        <option value="06">06</option>
+                        <option value="07">07</option>
+                        <option value="08">08</option>
+                        <option value="09">09</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                    </select>
+                </div>
+                
+                <div class="form-group-separator"></div> 
 
-            <div class="form-group">
-                <label for="task-priority">Prioridad:</label>
-                <select id="task-priority">
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Alta">Alta</option>
-                    <option value="Baja">Baja</option>
-                </select>
+                <div class="form-group">
+                    <label for="task-priority">Prioridad:</label>
+                     <select id="task-priority">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Baja">Baja</option>
+                    </select>
+                </div>
             </div>
-        </div>
-
-        <div class="form-row">
-            <div class="form-group" style="flex: 3;">
-                <label for="task-description">Descripción:</label>
-                <input type="text" id="task-description" placeholder="Descripción de la avería">
-            </div>
-            <div class="form-group">
-                <label for="task-priority">Prioridad:</label>
-                <select id="task-priority">
-                    <option value="Baja">Baja</option>
-                    <option value="Media" selected>Media</option>
-                    <option value="Alta">Alta</option>
-                </select>
-            </div>
-            <div class="form-group department-group">
-                <label>Depto:</label>
-                <select id="task-department">
-                    <option value="Eléctrico">Eléctrico</option>
-                    <option value="Mecánico">Mecánico</option>
-                    <option value="Setup">Setup</option>
-                </select>
-            </div>
-
-            <div style="align-self: flex-end;">
-                <button type="button" id="add-task-btn" class="add-task-btn">
-                    <i class="fas fa-plus"></i> Agregar
-                </button>
+            <div class="form-row">
+                <div class="form-group" style="flex: 3;">
+                    <label for="task-description">Descripción:</label>
+                    <input type="text" id="task-description" placeholder="Descripción de la avería">
+                </div>
+                <div class="form-group">
+                    <label>Depto:</label>
+                    <select id="task-department">
+                        <option value="Eléctrico">Eléctrico</option>
+                        <option value="Mecánico">Mecánico</option>
+                        <option value="Setup">Setup</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button id="add-task-btn" class="add-btn"><i class="fas fa-plus"></i> Agregar</button>
+                </div>
             </div>
         </div>
+
+        <div id="task-list" class="task-list-container">
+            </div>
     </div>
 
-    <div class="task-list" id="task-list">
-        <!-- Las tareas se agregarán aquí dinámicamente -->
-    </div>
-
-    <!-- Modal para notas -->
     <div id="note-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h3>Notas de la Tarea</h3>
-            <textarea class="note-textarea" id="note-textarea" placeholder="Escribe aquí lo realizado..."></textarea>
-            <button type="button" id="save-note-btn" class="save-note-btn">Guardar Nota</button>
+            <h2>Notas de la Tarea</h2>
+            <div id="notes-display" class="notes-display-area"></div>
+            <textarea id="note-input" placeholder="Escribe una nueva nota..."></textarea>
+            <button id="save-note-btn">Guardar Nota</button>
         </div>
     </div>
 
     <script src="js/app.js"></script>
 </body>
-
 </html>
