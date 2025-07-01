@@ -1,137 +1,94 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const taskInput = document.getElementById('taskInput');
-    const addTaskBtn = document.getElementById('addTaskBtn');
-    const taskList = document.getElementById('taskList');
+// Espera a que todo el HTML esté cargado
+document.addEventListener('DOMContentLoaded', function () {
 
-    // --- FUNCIÓN PARA RENDERIZAR UNA TAREA EN LA PÁGINA ---
-    const renderTask = (task) => {
-        const li = document.createElement('li');
-        li.dataset.id = task.id; // Guardar el ID de la base de datos
-        if (task.is_completed) {
-            li.classList.add('completed');
+    // --- ELEMENTOS DEL DOM ---
+    const addTaskBtn = document.getElementById('add-task-btn');
+    const taskList = document.getElementById('task-list');
+
+    // --- ¡LÍNEA CLAVE! ---
+    // Aquí se definen el usuario y la contraseña que se enviarán al servidor.
+    // Deben coincidir EXACTAMENTE con los de tu config.php
+    const credentials = btoa('u310879082_lisTa_User:D14cF]!Ft]');
+
+    // --- FUNCIÓN PARA AGREGAR TAREAS ---
+    async function handleAddTask() {
+        const taskData = {
+            machine: document.getElementById('machine-letter').value + document.getElementById('machine-number').value,
+            description: document.getElementById('task-description').value.trim(),
+            priority: document.getElementById('task-priority').value,
+            department: document.getElementById('task-department').value,
+        };
+
+        if (!taskData.description) {
+            alert('La descripción es obligatoria.');
+            return;
         }
 
-        const taskText = document.createElement('span');
-        taskText.textContent = task.task_name;
-        // Evento para marcar como completada (¡mejora!)
-        taskText.addEventListener('click', () => toggleComplete(task.id, !task.is_completed));
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Eliminar';
-        deleteBtn.className = 'delete-btn'; // Clase para estilos
-        // Evento para eliminar
-        deleteBtn.addEventListener('click', () => deleteTask(task.id));
-
-        li.appendChild(taskText);
-        li.appendChild(deleteBtn);
-        taskList.appendChild(li);
-    };
-
-    // --- CARGAR TAREAS DESDE LA BASE DE DATOS ---
-    const loadTasks = async () => {
         try {
-            // Apunta al script correcto en la carpeta /api/
-            const response = await fetch('api/get_tasks.php');
-            if (!response.ok) throw new Error('Error en la respuesta del servidor.');
-            
+            await saveTaskToDB(taskData);
+            loadTasks(); // Vuelve a cargar la lista después de guardar
+        } catch (error) {
+            console.error("FALLO al guardar:", error);
+            alert(`Error guardando la tarea: ${error.message}`);
+        }
+    }
+
+    // --- FUNCIÓN PARA GUARDAR EN LA BD ---
+    async function saveTaskToDB(task) {
+        const response = await fetch('api/save_tasks.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${credentials}` // Usa las credenciales
+            },
+            body: JSON.stringify(task)
+        });
+        const responseData = await response.json();
+        if (!response.ok) throw new Error(responseData.message || 'Error del servidor.');
+        return responseData;
+    }
+
+    // --- FUNCIÓN PARA CARGAR LAS TAREAS ---
+    async function loadTasks() {
+        try {
+            const response = await fetch('api/get_tasks.php', {
+                headers: {
+                    'Authorization': `Basic ${credentials}` // Usa las credenciales
+                }
+            });
+
+            if (!response.ok) {
+                 const errorData = await response.json();
+                 throw new Error(errorData.message || `Error del servidor: ${response.status}`);
+            }
+
             const tasks = await response.json();
-            taskList.innerHTML = ''; // Limpiar la lista actual
-            tasks.forEach(renderTask); // Renderizar cada tarea obtenida
-        } catch (error) {
-            console.error('Error al cargar las tareas:', error);
-            taskList.innerHTML = '<li>Error al cargar las tareas. Revisa la consola.</li>';
-        }
-    };
-
-    // --- AÑADIR UNA NUEVA TAREA ---
-    const addTask = async () => {
-        const taskName = taskInput.value.trim();
-        if (taskName === '') return;
-
-        try {
-            // Apunta al script correcto en la carpeta /api/
-            const response = await fetch('api/task.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ task_name: taskName }),
-            });
-
-            if (!response.ok) throw new Error('Error en la respuesta del servidor.');
-
-            const result = await response.json();
             
-            if (result.success) {
-                // Si el backend confirma que guardó, la añadimos al frontend
-                renderTask({ id: result.id, task_name: taskName, is_completed: false });
-                taskInput.value = '';
-                taskInput.focus();
+            taskList.innerHTML = ''; 
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<p>No hay tareas pendientes. ¡Agrega una!</p>';
             } else {
-                console.error('Error del servidor al guardar la tarea:', result.message);
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'task-item';
+                    taskItem.innerHTML = `
+                        <strong>${task.machine}</strong> - 
+                        <span>${task.description}</span> 
+                        <em>(${task.priority})</em>`;
+                    taskList.appendChild(taskItem);
+                });
             }
+
         } catch (error) {
-            console.error('Error al añadir la tarea:', error);
+            console.error("Error al cargar las tareas:", error);
+            taskList.innerHTML = `<p style="color: red;">No se pudieron cargar las tareas: ${error.message}</p>`;
         }
-    };
+    }
 
-    // --- ELIMINAR UNA TAREA (¡Función nueva y necesaria!) ---
-    const deleteTask = async (taskId) => {
-        if (!confirm('¿Estás seguro de que quieres eliminar esta tarea?')) return;
+    // Asignar el evento al botón
+    addTaskBtn.addEventListener('click', handleAddTask);
 
-        try {
-            // Necesitas crear este archivo: api/delete_task.php
-            const response = await fetch('api/delete_task.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: taskId }),
-            });
-            
-            if (!response.ok) throw new Error('Error en la respuesta del servidor.');
-
-            const result = await response.json();
-            if (result.success) {
-                const li = document.querySelector(`li[data-id='${taskId}']`);
-                if (li) li.remove();
-            } else {
-                console.error('Error del servidor al eliminar:', result.message);
-            }
-        } catch (error) {
-            console.error('Error al eliminar la tarea:', error);
-        }
-    };
-    
-    // --- MARCAR COMO COMPLETADA (¡Función nueva y necesaria!) ---
-    const toggleComplete = async (taskId, isCompleted) => {
-        try {
-            // Necesitas crear este archivo: api/update_task.php
-            const response = await fetch('api/update_task.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: taskId, is_completed: isCompleted }),
-            });
-            
-            if (!response.ok) throw new Error('Error en la respuesta del servidor.');
-            
-            const result = await response.json();
-            if (result.success) {
-                const li = document.querySelector(`li[data-id='${taskId}']`);
-                if (li) li.classList.toggle('completed', isCompleted);
-            } else {
-                 console.error('Error del servidor al actualizar:', result.message);
-            }
-        } catch (error) {
-            console.error('Error al actualizar la tarea:', error);
-        }
-    };
-
-
-    // --- EVENT LISTENERS ---
-    addTaskBtn.addEventListener('click', addTask);
-    taskInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            addTask();
-        }
-    });
-
-    // --- CARGA INICIAL ---
+    // Carga inicial de tareas
     loadTasks();
 });

@@ -1,28 +1,38 @@
 <?php
-// Devolver siempre contenido de tipo JSON
-header('Content-Type: application/json');
+header("Content-Type: application/json; charset=UTF-8");
 require_once 'config.php';
 
-$sql = "SELECT id, task_name, is_completed FROM tasks ORDER BY created_at DESC";
-$result = $conn->query($sql);
+try {
+    // Autenticación...
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+    if (!$authHeader) throw new Exception('No se encontró el encabezado de autorización.', 401);
+    list($type, $credentials) = explode(' ', $authHeader, 2);
+    $decodedCredentials = base64_decode($credentials);
+    list($user, $pass) = explode(':', $decodedCredentials, 2);
+    if ($user !== DB_USER || $pass !== DB_PASS) throw new Exception('Credenciales incorrectas.', 401);
 
-if (!$result) {
-    // Si hay un error en la consulta, devuélvelo para poder depurar
-    echo json_encode(['success' => false, 'message' => 'Error en la consulta SQL: ' . $conn->error]);
-    exit;
-}
+    // Lógica para obtener tareas
+    $tasks = [];
+    // La consulta SQL ahora selecciona las columnas correctas
+    $query = "SELECT id, machine, description, priority, department, status, created_at FROM tasks ORDER BY created_at DESC";
+    $result = $conn->query($query);
 
-$tasks = [];
-if ($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        // Correcto: Convertir el valor de la BD (0 o 1) a un booleano (false o true)
-        $row['is_completed'] = (bool)$row['is_completed']; 
+    if ($result === false) {
+        throw new Exception("Error en la consulta SQL: " . $conn->error);
+    }
+    
+    while ($row = $result->fetch_assoc()) {
         $tasks[] = $row;
     }
+    
+    $conn->close();
+
+    http_response_code(200);
+    echo json_encode($tasks);
+
+} catch (Exception $e) {
+    $errorCode = $e->getCode() > 0 ? $e->getCode() : 500;
+    http_response_code($errorCode);
+    echo json_encode(["message" => "Ocurrió un error en el servidor.", "error" => $e->getMessage()]);
 }
-
-$conn->close();
-
-// Devuelve directamente el arreglo de tareas
-echo json_encode($tasks); 
 ?>
