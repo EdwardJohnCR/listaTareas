@@ -1,9 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // --- ELEMENTOS DEL DOM Y ESTADO ---
+    // --- ELEMENTOS DEL DOM Y ESTADO GLOBAL ---
     const addTaskBtn = document.getElementById('add-task-btn');
     const taskList = document.getElementById('task-list');
-    
-    // --- ¡CONTRASEÑA ACTUALIZADA! ---
     const credentials = btoa('u310879082_lisTa_User:D14cF]!Ft]');
     let currentTasks = [];
 
@@ -11,14 +9,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const noteModal = document.getElementById('note-modal');
     const closeBtn = noteModal.querySelector('.close-btn');
     const saveNoteBtn = document.getElementById('save-note-btn');
-    const notesDisplay = document.getElementById('notes-display');
-    const noteInput = document.getElementById('note-input');
     let currentNoteTaskId = null;
-    
+
+    function openNoteModal(task) {
+        currentNoteTaskId = task.id;
+        document.getElementById('notes-display').innerHTML = task.notes ? task.notes.replace(/\n---\n/g, '<hr>').replace(/\n/g, '<br>') : 'Aún no hay notas.';
+        document.getElementById('note-input').value = '';
+        noteModal.style.display = 'block';
+    }
+
     closeBtn.onclick = () => noteModal.style.display = 'none';
     window.onclick = (e) => { if (e.target == noteModal) noteModal.style.display = 'none'; };
-    
+
     saveNoteBtn.onclick = async () => {
+        const noteInput = document.getElementById('note-input');
         if (!noteInput.value.trim()) return;
         try {
             await apiCall('notes.php', 'POST', { task_id: currentNoteTaskId, note: noteInput.value.trim() });
@@ -26,13 +30,6 @@ document.addEventListener('DOMContentLoaded', function () {
             loadTasks();
         } catch (error) { console.error('Error al guardar nota:', error); }
     };
-
-    function openNoteModal(task) {
-        currentNoteTaskId = task.id;
-        notesDisplay.innerHTML = task.notes ? task.notes.replace(/\n---\n/g, '<hr>').replace(/\n/g, '<br>') : 'Aún no hay notas.';
-        noteInput.value = '';
-        noteModal.style.display = 'block';
-    }
 
     // --- FUNCIÓN GENÉRICA PARA LLAMADAS A LA API ---
     async function apiCall(endpoint, method = 'GET', body = null) {
@@ -42,9 +39,11 @@ document.addEventListener('DOMContentLoaded', function () {
             options.body = JSON.stringify(body);
         }
         const response = await fetch(`api/${endpoint}`, options);
-        const responseData = await response.json();
-        if (!response.ok) throw new Error(responseData.message || 'Error del servidor');
-        return responseData;
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: 'El servidor respondió con un error no JSON.' }));
+            throw new Error(errorData.message || 'Error desconocido del servidor.');
+        }
+        return response.json();
     }
 
     // --- RENDERIZADO DE TAREAS ---
@@ -55,10 +54,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        currentTasks.forEach((task, index) => {
-            const statusClass = `status-${task.status.toLowerCase()}`;
+        currentTasks.forEach((task) => {
+            const isCompleted = task.status === 'Finalizada';
+            const statusClass = `status-${task.status.toLowerCase().replace('ó', 'o')}`;
             const priorityClass = `priority-${task.priority.toLowerCase()}`;
-            const completedClass = task.completed ? 'completed' : '';
+            const completedClass = isCompleted ? 'completed' : '';
+
             const taskItem = document.createElement('div');
             taskItem.className = `task-item ${statusClass} ${priorityClass} ${completedClass}`;
             taskItem.dataset.id = task.id;
@@ -66,8 +67,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const noteCount = task.notes ? (task.notes.match(/---/g) || []).length + 1 : 0;
 
             taskItem.innerHTML = `
-                <div class="task-number">${index + 1}.</div>
-                <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''}>
+                <div class="task-number">${task.id}</div>
+                <input type="checkbox" class="task-checkbox" ${isCompleted ? 'checked' : ''}>
                 <div class="task-machine-wrapper">
                     <div class="task-machine-label">Máquina:</div>
                     <div class="task-machine">${task.machine}</div>
@@ -86,10 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <option value="Setup" ${task.department === 'Setup' ? 'selected' : ''}>Setup</option>
                 </select>
                 <div class="task-actions">
-                    <button class="action-btn note-btn ${noteCount > 0 ? 'has-note' : ''}" title="Notas">
-                        <i class="fas fa-comment"></i>
-                        ${noteCount > 0 ? `<span class="note-count">${noteCount}</span>` : ''}
-                    </button>
+                    <button class="action-btn note-btn ${noteCount > 0 ? 'has-note' : ''}" title="Notas"><i class="fas fa-comment"></i></button>
                     <button class="action-btn delete-btn" title="Eliminar"><i class="fas fa-trash"></i></button>
                 </div>
             `;
@@ -97,10 +95,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // --- CARGA INICIAL DE TAREAS ---
+    async function loadTasks() {
+        try {
+            currentTasks = await apiCall('get_tasks.php');
+            renderTasks();
+        } catch (error) {
+            taskList.innerHTML = `<p style="color: red;">Error al cargar las tareas: ${error.message}</p>`;
+        }
+    }
+
     // --- LÓGICA DE EVENTOS ---
 
-    // **AÑADIR NUEVA TAREA** (Lógica corregida)
-    addTaskBtn.addEventListener('click', async () => {
+    // **AÑADIR NUEVA TAREA**
+    async function handleAddTask() {
         const taskData = {
             machine: document.getElementById('machine-letter').value + document.getElementById('machine-number').value,
             description: document.getElementById('task-description').value.trim(),
@@ -112,77 +120,76 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         try {
-            // 1. Guardar la tarea en la base de datos
             await apiCall('save_tasks.php', 'POST', taskData);
-            
-            // 2. Limpiar el campo de descripción
             document.getElementById('task-description').value = '';
-            
-            // 3. Recargar TODA la lista desde la base de datos.
-            //    Esta es la única acción necesaria para mostrar la nueva tarea.
-            loadTasks(); 
+            loadTasks();
         } catch (error) {
             console.error('Error al guardar:', error);
             alert(`No se pudo guardar la tarea: ${error.message}`);
         }
-    });
+    }
 
-    // **INTERACCIONES DENTRO DE LA LISTA** (Actualizar, eliminar, abrir notas)
-    taskList.addEventListener('click', async (e) => {
-        const button = e.target.closest('button');
-        if (!button) return;
+    // **INTERACCIONES DENTRO DE LA LISTA**
+    async function handleTaskListInteraction(e) {
+        const target = e.target;
+        const taskItem = target.closest('.task-item');
+        if (!taskItem) return;
 
-        const taskItem = button.closest('.task-item');
         const taskId = parseInt(taskItem.dataset.id);
-
-        if (button.classList.contains('delete-btn')) {
-            if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
-                try {
-                    await apiCall('delete_task.php', 'POST', { id: taskId });
-                    loadTasks();
-                } catch (error) { console.error('Error al eliminar:', error); }
-            }
-        } else if (button.classList.contains('note-btn')) {
-            const task = currentTasks.find(t => t.id === taskId);
-            if (task) openNoteModal(task);
-        }
-    });
-
-    taskList.addEventListener('change', async (e) => {
-        const element = e.target;
-        if (element.tagName !== 'SELECT' && element.type !== 'checkbox') return;
-
-        const taskItem = element.closest('.task-item');
-        const taskId = parseInt(taskItem.dataset.id);
-        const task = currentTasks.find(t => t.id === taskId);
+        let task = currentTasks.find(t => t.id === taskId);
         if (!task) return;
+        
+        task = { ...task }; // Clonar para evitar modificar el estado original directamente
 
-        if (element.classList.contains('task-checkbox')) {
-            task.completed = element.checked;
-            // Si se marca, se finaliza. Si se desmarca, vuelve a pendiente.
-            task.status = task.completed ? 'Finalizada' : 'Pendiente'; 
-        } else if (element.classList.contains('task-status')) {
-            task.status = element.value;
-            task.completed = task.status === 'Finalizada';
-        } else if (element.classList.contains('task-department-select')) {
-            task.department = element.value;
+        let needsApiUpdate = false;
+
+        // Click en Botones de Acción
+        if (target.closest('button.action-btn')) {
+            const button = target.closest('button.action-btn');
+            if (button.classList.contains('delete-btn')) {
+                if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+                    try {
+                        await apiCall('delete_task.php', 'POST', { id: taskId });
+                        loadTasks();
+                    } catch (error) { console.error('Error al eliminar:', error); }
+                }
+            } else if (button.classList.contains('note-btn')) {
+                openNoteModal(task);
+            }
+            return;
         }
         
-        try {
-            await apiCall('update_task.php', 'POST', task);
-            loadTasks();
-        } catch (error) { console.error('Error al actualizar:', error); }
-    });
+        // Cambio en Checkbox o Selects
+        if (target.classList.contains('task-checkbox')) {
+            task.completed = target.checked;
+            task.status = task.completed ? 'Finalizada' : 'Pendiente';
+            needsApiUpdate = true;
+        } else if (target.classList.contains('task-status')) {
+            task.status = target.value;
+            task.completed = task.status === 'Finalizada';
+            needsApiUpdate = true;
+        } else if (target.classList.contains('task-department-select')) {
+            task.department = target.value;
+            needsApiUpdate = true;
+        }
 
-    // --- CARGA INICIAL ---
-    async function loadTasks() {
-        try {
-            currentTasks = await apiCall('get_tasks.php');
-            renderTasks();
-        } catch (error) {
-            taskList.innerHTML = `<p style="color: red;">Error al cargar: ${error.message}</p>`;
+        if (needsApiUpdate) {
+            try {
+                await apiCall('update_task.php', 'POST', task);
+                loadTasks();
+            } catch (error) { 
+                console.error('Error al actualizar:', error);
+                alert('No se pudo actualizar la tarea. La lista se recargará.');
+                loadTasks();
+            }
         }
     }
 
+    // --- INICIALIZACIÓN ---
+    // Asigna los listeners y carga los datos por primera vez.
+    addTaskBtn.addEventListener('click', handleAddTask);
+    taskList.addEventListener('click', handleTaskListInteraction);
+    taskList.addEventListener('change', handleTaskListInteraction);
+    
     loadTasks();
 });
