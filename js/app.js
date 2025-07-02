@@ -19,19 +19,6 @@ document.addEventListener('DOMContentLoaded', function () {
         noteModal.style.display = 'block';
     }
 
-    closeBtn.onclick = () => noteModal.style.display = 'none';
-    window.onclick = (e) => { if (e.target == noteModal) noteModal.style.display = 'none'; };
-    
-    saveNoteBtn.onclick = async () => {
-        const noteInput = document.getElementById('note-input');
-        if (!noteInput.value.trim()) return;
-        try {
-            await apiCall('notes.php', 'POST', { task_id: currentNoteTaskId, note: noteInput.value.trim() });
-            noteModal.style.display = 'none';
-            await loadTasks(true); // Recarga la lista para mostrar el cambio
-        } catch (error) { console.error('Error al guardar nota:', error); }
-    };
-
     // --- FUNCIÓN GENÉRICA PARA LLAMADAS A LA API ---
     async function apiCall(endpoint, method = 'GET', body = null) {
         const options = { method, headers: { 'Authorization': `Basic ${credentials}` } };
@@ -102,26 +89,51 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         taskList.scrollTop = scrollPosition;
     }
+    
+    // --- FUNCIÓN PARA CARGAR TAREAS (AHORA VISIBLE PARA TODOS) ---
+    async function loadTasks(isUserAction = false) {
+        try {
+            const newTasks = await apiCall('get_tasks.php');
+            if (JSON.stringify(newTasks) !== JSON.stringify(currentTasks) || isUserAction) {
+                currentTasks = newTasks;
+                renderTasks();
+            }
+        } catch (error) {
+            console.error("Error crítico al cargar tareas:", error.message);
+            if (pollingInterval) clearInterval(pollingInterval);
+            taskList.innerHTML = `<p style="color: red;">Error de conexión. La actualización se ha detenido.</p>`;
+        }
+    }
 
-    // --- LÓGICA DE EVENTOS ---
+    // --- MANEJADORES DE EVENTOS ---
     async function handleAddTask() {
+        addTaskBtn.disabled = true;
+        addTaskBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
         const taskData = {
             machine: document.getElementById('machine-letter').value + document.getElementById('machine-number').value,
             description: document.getElementById('task-description').value.trim(),
             priority: document.getElementById('task-priority').value,
             department: document.getElementById('task-department').value,
         };
+
         if (!taskData.description) {
             alert('La descripción es obligatoria.');
+            addTaskBtn.disabled = false;
+            addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Agregar';
             return;
         }
+
         try {
             await apiCall('save_tasks.php', 'POST', taskData);
             document.getElementById('task-description').value = '';
-            await loadTasks(true); // Forzar recarga después de agregar
+            await loadTasks(true); 
         } catch (error) {
             console.error('Error al guardar:', error);
             alert(`No se pudo guardar la tarea: ${error.message}`);
+        } finally {
+            addTaskBtn.disabled = false;
+            addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Agregar';
         }
     }
 
@@ -129,8 +141,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const target = e.target;
         const taskItem = target.closest('.task-item');
         if (!taskItem) return;
-
         const taskId = parseInt(taskItem.dataset.id);
+        const task = { ...currentTasks.find(t => t.id === taskId) };
+        if (!task) return;
 
         if (target.closest('button.action-btn')) {
             const button = target.closest('button.action-btn');
@@ -142,16 +155,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     } catch (error) { console.error('Error al eliminar:', error); }
                 }
             } else if (button.classList.contains('note-btn')) {
-                const task = currentTasks.find(t => t.id === taskId);
-                if (task) openNoteModal(task);
+                openNoteModal(task);
             }
             return;
         }
         
         if (target.tagName === 'SELECT' || target.type === 'checkbox') {
-            const task = { ...currentTasks.find(t => t.id === taskId) };
-            if (!task) return;
-            
             if (target.classList.contains('task-checkbox')) {
                 task.completed = target.checked;
                 task.status = task.completed ? 'Finalizada' : 'Pendiente';
@@ -167,22 +176,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 await loadTasks(true);
             } catch (error) { 
                 console.error('Error al actualizar:', error);
+                await loadTasks(true);
             }
-        }
-    }
-
-    // --- CARGA INICIAL Y ACTUALIZACIÓN AUTOMÁTICA ---
-    async function loadTasks(fromUserAction = false) {
-        try {
-            const newTasks = await apiCall('get_tasks.php');
-            if (JSON.stringify(newTasks) !== JSON.stringify(currentTasks) || fromUserAction) {
-                currentTasks = newTasks;
-                renderTasks();
-            }
-        } catch (error) {
-            console.error("Error durante la carga de tareas:", error.message);
-            if (pollingInterval) clearInterval(pollingInterval);
-            taskList.innerHTML = `<p style="color: red;">Error de conexión. La actualización se ha detenido.</p>`;
         }
     }
 
@@ -192,8 +187,19 @@ document.addEventListener('DOMContentLoaded', function () {
         taskList.addEventListener('click', handleTaskListInteraction);
         taskList.addEventListener('change', handleTaskListInteraction);
         
-        loadTasks(true);
-        
+        closeBtn.onclick = () => noteModal.style.display = 'none';
+        window.onclick = (e) => { if (e.target == noteModal) noteModal.style.display = 'none'; };
+        saveNoteBtn.onclick = async () => {
+            const noteInput = document.getElementById('note-input');
+            if (!noteInput.value.trim()) return;
+            try {
+                await apiCall('notes.php', 'POST', { task_id: currentNoteTaskId, note: noteInput.value.trim() });
+                noteModal.style.display = 'none';
+                await loadTasks(true);
+            } catch (error) { console.error('Error al guardar nota:', error); }
+        };
+
+        loadTasks(true); // Carga inicial
         pollingInterval = setInterval(() => loadTasks(false), 10000); 
     }
 

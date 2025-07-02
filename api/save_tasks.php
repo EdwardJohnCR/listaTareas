@@ -16,6 +16,24 @@ try {
         throw new Exception('La máquina y la descripción son obligatorias.', 400);
     }
     
+    // --- VALIDACIÓN ANTI-DUPLICADOS (TU SOLUCIÓN IMPLEMENTADA) ---
+    // Prepara una consulta para ver si ya existe una tarea idéntica (misma máquina y descripción)
+    $checkQuery = "SELECT id FROM tasks WHERE machine = ? AND description = ?";
+    $checkStmt = $conn->prepare($checkQuery);
+    $checkStmt->bind_param("ss", $data->machine, $data->description);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+
+    // Si la consulta devuelve al menos una fila, la tarea ya existe.
+    if ($result->num_rows > 0) {
+        http_response_code(409); // 409 Conflict: indica un duplicado
+        exit(json_encode(["message" => "Esta tarea ya existe y no se guardará de nuevo."]));
+    }
+    $checkStmt->close();
+    // --- FIN DE LA VALIDACIÓN ---
+
+
+    // Si no hay duplicados, procede a insertar la nueva tarea
     $query = "INSERT INTO tasks (machine, description, priority, department, status) VALUES (?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($query);
     $status = 'Pendiente';
@@ -23,7 +41,6 @@ try {
 
     if ($stmt->execute()) {
         http_response_code(201);
-        // Devolver un JSON simple confirmando el éxito.
         echo json_encode(["message" => "Tarea guardada con éxito.", "id" => $conn->insert_id]);
     } else {
         throw new Exception("No se pudo guardar la tarea: " . $stmt->error);
