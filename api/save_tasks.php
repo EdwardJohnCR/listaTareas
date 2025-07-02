@@ -23,6 +23,7 @@ try {
 
     if ($stmt->execute()) {
         http_response_code(201);
+        // Devolver un JSON simple confirmando el éxito.
         echo json_encode(["message" => "Tarea guardada con éxito.", "id" => $conn->insert_id]);
     } else {
         throw new Exception("No se pudo guardar la tarea: " . $stmt->error);

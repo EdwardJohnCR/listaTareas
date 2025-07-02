@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const taskList = document.getElementById('task-list');
     const credentials = btoa('u310879082_lisTa_User:D14cF]!Ft]');
     let currentTasks = [];
+    let pollingInterval;
 
     // --- MANEJO DEL MODAL DE NOTAS ---
     const noteModal = document.getElementById('note-modal');
@@ -20,14 +21,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     closeBtn.onclick = () => noteModal.style.display = 'none';
     window.onclick = (e) => { if (e.target == noteModal) noteModal.style.display = 'none'; };
-
+    
     saveNoteBtn.onclick = async () => {
         const noteInput = document.getElementById('note-input');
         if (!noteInput.value.trim()) return;
         try {
             await apiCall('notes.php', 'POST', { task_id: currentNoteTaskId, note: noteInput.value.trim() });
             noteModal.style.display = 'none';
-            loadTasks();
+            await loadTasks(true); // Recarga la lista para mostrar el cambio
         } catch (error) { console.error('Error al guardar nota:', error); }
     };
 
@@ -43,18 +44,24 @@ document.addEventListener('DOMContentLoaded', function () {
             const errorData = await response.json().catch(() => ({ message: 'El servidor respondió con un error no JSON.' }));
             throw new Error(errorData.message || 'Error desconocido del servidor.');
         }
+        if (response.status === 204 || (response.headers.get("content-length") || "0") === "0") {
+            return null;
+        }
         return response.json();
     }
 
     // --- RENDERIZADO DE TAREAS ---
     function renderTasks() {
+        const scrollPosition = taskList.scrollTop;
         taskList.innerHTML = '';
         if (currentTasks.length === 0) {
             taskList.innerHTML = '<p style="text-align: center; color: #95a5a6;">No hay tareas pendientes.</p>';
             return;
         }
 
-        currentTasks.forEach((task) => {
+        const sortedTasks = [...currentTasks].sort((a, b) => b.id - a.id);
+
+        sortedTasks.forEach((task) => {
             const isCompleted = task.status === 'Finalizada';
             const statusClass = `status-${task.status.toLowerCase().replace('ó', 'o')}`;
             const priorityClass = `priority-${task.priority.toLowerCase()}`;
@@ -93,21 +100,10 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
             taskList.appendChild(taskItem);
         });
-    }
-
-    // --- CARGA INICIAL DE TAREAS ---
-    async function loadTasks() {
-        try {
-            currentTasks = await apiCall('get_tasks.php');
-            renderTasks();
-        } catch (error) {
-            taskList.innerHTML = `<p style="color: red;">Error al cargar las tareas: ${error.message}</p>`;
-        }
+        taskList.scrollTop = scrollPosition;
     }
 
     // --- LÓGICA DE EVENTOS ---
-
-    // **AÑADIR NUEVA TAREA**
     async function handleAddTask() {
         const taskData = {
             machine: document.getElementById('machine-letter').value + document.getElementById('machine-number').value,
@@ -122,74 +118,84 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             await apiCall('save_tasks.php', 'POST', taskData);
             document.getElementById('task-description').value = '';
-            loadTasks();
+            await loadTasks(true); // Forzar recarga después de agregar
         } catch (error) {
             console.error('Error al guardar:', error);
             alert(`No se pudo guardar la tarea: ${error.message}`);
         }
     }
 
-    // **INTERACCIONES DENTRO DE LA LISTA**
     async function handleTaskListInteraction(e) {
         const target = e.target;
         const taskItem = target.closest('.task-item');
         if (!taskItem) return;
 
         const taskId = parseInt(taskItem.dataset.id);
-        let task = currentTasks.find(t => t.id === taskId);
-        if (!task) return;
-        
-        task = { ...task }; // Clonar para evitar modificar el estado original directamente
 
-        let needsApiUpdate = false;
-
-        // Click en Botones de Acción
         if (target.closest('button.action-btn')) {
             const button = target.closest('button.action-btn');
             if (button.classList.contains('delete-btn')) {
                 if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
                     try {
                         await apiCall('delete_task.php', 'POST', { id: taskId });
-                        loadTasks();
+                        await loadTasks(true);
                     } catch (error) { console.error('Error al eliminar:', error); }
                 }
             } else if (button.classList.contains('note-btn')) {
-                openNoteModal(task);
+                const task = currentTasks.find(t => t.id === taskId);
+                if (task) openNoteModal(task);
             }
             return;
         }
         
-        // Cambio en Checkbox o Selects
-        if (target.classList.contains('task-checkbox')) {
-            task.completed = target.checked;
-            task.status = task.completed ? 'Finalizada' : 'Pendiente';
-            needsApiUpdate = true;
-        } else if (target.classList.contains('task-status')) {
-            task.status = target.value;
-            task.completed = task.status === 'Finalizada';
-            needsApiUpdate = true;
-        } else if (target.classList.contains('task-department-select')) {
-            task.department = target.value;
-            needsApiUpdate = true;
-        }
+        if (target.tagName === 'SELECT' || target.type === 'checkbox') {
+            const task = { ...currentTasks.find(t => t.id === taskId) };
+            if (!task) return;
+            
+            if (target.classList.contains('task-checkbox')) {
+                task.completed = target.checked;
+                task.status = task.completed ? 'Finalizada' : 'Pendiente';
+            } else if (target.classList.contains('task-status')) {
+                task.status = target.value;
+                task.completed = task.status === 'Finalizada';
+            } else if (target.classList.contains('task-department-select')) {
+                task.department = target.value;
+            }
 
-        if (needsApiUpdate) {
             try {
                 await apiCall('update_task.php', 'POST', task);
-                loadTasks();
+                await loadTasks(true);
             } catch (error) { 
                 console.error('Error al actualizar:', error);
-                alert('No se pudo actualizar la tarea. La lista se recargará.');
-                loadTasks();
             }
         }
     }
 
-    // --- INICIALIZACIÓN ---
-    // Asigna los listeners y carga los datos por primera vez.
-    addTaskBtn.addEventListener('click', handleAddTask);
-    taskList.addEventListener('click', handleTaskListInteraction);
-    taskList.addEventListener('change', handleTaskListInteraction);
-    
-    loadTasks();
+    // --- CARGA INICIAL Y ACTUALIZACIÓN AUTOMÁTICA ---
+    async function loadTasks(fromUserAction = false) {
+        try {
+            const newTasks = await apiCall('get_tasks.php');
+            if (JSON.stringify(newTasks) !== JSON.stringify(currentTasks) || fromUserAction) {
+                currentTasks = newTasks;
+                renderTasks();
+            }
+        } catch (error) {
+            console.error("Error durante la carga de tareas:", error.message);
+            if (pollingInterval) clearInterval(pollingInterval);
+            taskList.innerHTML = `<p style="color: red;">Error de conexión. La actualización se ha detenido.</p>`;
+        }
+    }
+
+    // --- INICIALIZACIÓN DE LA APLICACIÓN ---
+    function startApp() {
+        addTaskBtn.addEventListener('click', handleAddTask);
+        taskList.addEventListener('click', handleTaskListInteraction);
+        taskList.addEventListener('change', handleTaskListInteraction);
+        
+        loadTasks(true);
+        
+        pollingInterval = setInterval(() => loadTasks(false), 10000); 
+    }
+
+    startApp();
 });
