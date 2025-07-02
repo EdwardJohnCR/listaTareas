@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const taskList = document.getElementById('task-list');
     const credentials = btoa('u310879082_lisTa_User:D14cF]!Ft]');
     let currentTasks = [];
-    let pollingInterval;
 
     // --- MANEJO DEL MODAL DE NOTAS ---
     const noteModal = document.getElementById('note-modal');
@@ -31,9 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const errorData = await response.json().catch(() => ({ message: 'El servidor respondió con un error no JSON.' }));
             throw new Error(errorData.message || 'Error desconocido del servidor.');
         }
-        if (response.status === 204 || (response.headers.get("content-length") || "0") === "0") {
-            return null;
-        }
+        if (response.status === 204 || (response.headers.get("content-length") || "0") === "0") return null;
         return response.json();
     }
 
@@ -45,21 +42,16 @@ document.addEventListener('DOMContentLoaded', function () {
             taskList.innerHTML = '<p style="text-align: center; color: #95a5a6;">No hay tareas pendientes.</p>';
             return;
         }
-
         const sortedTasks = [...currentTasks].sort((a, b) => b.id - a.id);
-
         sortedTasks.forEach((task) => {
             const isCompleted = task.status === 'Finalizada';
             const statusClass = `status-${task.status.toLowerCase().replace('ó', 'o')}`;
             const priorityClass = `priority-${task.priority.toLowerCase()}`;
             const completedClass = isCompleted ? 'completed' : '';
-
             const taskItem = document.createElement('div');
             taskItem.className = `task-item ${statusClass} ${priorityClass} ${completedClass}`;
             taskItem.dataset.id = task.id;
-
             const noteCount = task.notes ? (task.notes.match(/---/g) || []).length + 1 : 0;
-
             taskItem.innerHTML = `
                 <div class="task-number">${task.id}</div>
                 <input type="checkbox" class="task-checkbox" ${isCompleted ? 'checked' : ''}>
@@ -89,45 +81,42 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         taskList.scrollTop = scrollPosition;
     }
-    
-    // --- FUNCIÓN PARA CARGAR TAREAS (AHORA VISIBLE PARA TODOS) ---
-    async function loadTasks(isUserAction = false) {
+
+    // --- FUNCIÓN PARA CARGAR TAREAS DESDE LA BASE DE DATOS ---
+    async function loadTasks() {
         try {
-            const newTasks = await apiCall('get_tasks.php');
-            if (JSON.stringify(newTasks) !== JSON.stringify(currentTasks) || isUserAction) {
-                currentTasks = newTasks;
-                renderTasks();
-            }
+            const serverTasks = await apiCall('get_tasks.php');
+            currentTasks = serverTasks;
+            renderTasks();
         } catch (error) {
             console.error("Error crítico al cargar tareas:", error.message);
-            if (pollingInterval) clearInterval(pollingInterval);
-            taskList.innerHTML = `<p style="color: red;">Error de conexión. La actualización se ha detenido.</p>`;
+            taskList.innerHTML = `<p style="color: red;">Error de conexión.</p>`;
         }
     }
 
     // --- MANEJADORES DE EVENTOS ---
+
+    // **AÑADIR NUEVA TAREA**
     async function handleAddTask() {
         addTaskBtn.disabled = true;
         addTaskBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-
         const taskData = {
             machine: document.getElementById('machine-letter').value + document.getElementById('machine-number').value,
             description: document.getElementById('task-description').value.trim(),
             priority: document.getElementById('task-priority').value,
             department: document.getElementById('task-department').value,
         };
-
         if (!taskData.description) {
             alert('La descripción es obligatoria.');
             addTaskBtn.disabled = false;
             addTaskBtn.innerHTML = '<i class="fas fa-plus"></i> Agregar';
             return;
         }
-
         try {
             await apiCall('save_tasks.php', 'POST', taskData);
             document.getElementById('task-description').value = '';
-            await loadTasks(true); 
+            // Después de guardar, la única acción es recargar la lista.
+            await loadTasks(); 
         } catch (error) {
             console.error('Error al guardar:', error);
             alert(`No se pudo guardar la tarea: ${error.message}`);
@@ -137,71 +126,71 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // **INTERACCIONES DENTRO DE LA LISTA**
     async function handleTaskListInteraction(e) {
         const target = e.target;
         const taskItem = target.closest('.task-item');
         if (!taskItem) return;
         const taskId = parseInt(taskItem.dataset.id);
-        const task = { ...currentTasks.find(t => t.id === taskId) };
-        if (!task) return;
-
+        
         if (target.closest('button.action-btn')) {
             const button = target.closest('button.action-btn');
             if (button.classList.contains('delete-btn')) {
                 if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
                     try {
                         await apiCall('delete_task.php', 'POST', { id: taskId });
-                        await loadTasks(true);
+                        await loadTasks();
                     } catch (error) { console.error('Error al eliminar:', error); }
                 }
             } else if (button.classList.contains('note-btn')) {
-                openNoteModal(task);
+                const task = currentTasks.find(t => t.id === taskId);
+                if (task) openNoteModal(task);
             }
             return;
         }
         
         if (target.tagName === 'SELECT' || target.type === 'checkbox') {
+            const task = { ...currentTasks.find(t => t.id === taskId) };
+            if (!task) return;
             if (target.classList.contains('task-checkbox')) {
-                task.completed = target.checked;
-                task.status = task.completed ? 'Finalizada' : 'Pendiente';
+                task.status = target.checked ? 'Finalizada' : 'Pendiente';
             } else if (target.classList.contains('task-status')) {
                 task.status = target.value;
-                task.completed = task.status === 'Finalizada';
             } else if (target.classList.contains('task-department-select')) {
                 task.department = target.value;
             }
-
             try {
                 await apiCall('update_task.php', 'POST', task);
-                await loadTasks(true);
+                await loadTasks();
             } catch (error) { 
                 console.error('Error al actualizar:', error);
-                await loadTasks(true);
+                await loadTasks();
             }
         }
     }
 
     // --- INICIALIZACIÓN DE LA APLICACIÓN ---
-    function startApp() {
+    function init() {
+        // Se asignan los listeners UNA SOLA VEZ
         addTaskBtn.addEventListener('click', handleAddTask);
         taskList.addEventListener('click', handleTaskListInteraction);
         taskList.addEventListener('change', handleTaskListInteraction);
-        
-        closeBtn.onclick = () => noteModal.style.display = 'none';
+
+        // Listeners del modal
+        if (closeBtn) closeBtn.onclick = () => noteModal.style.display = 'none';
         window.onclick = (e) => { if (e.target == noteModal) noteModal.style.display = 'none'; };
-        saveNoteBtn.onclick = async () => {
+        if (saveNoteBtn) saveNoteBtn.onclick = async () => {
             const noteInput = document.getElementById('note-input');
             if (!noteInput.value.trim()) return;
             try {
                 await apiCall('notes.php', 'POST', { task_id: currentNoteTaskId, note: noteInput.value.trim() });
                 noteModal.style.display = 'none';
-                await loadTasks(true);
+                await loadTasks();
             } catch (error) { console.error('Error al guardar nota:', error); }
         };
-
-        loadTasks(true); // Carga inicial
-        pollingInterval = setInterval(() => loadTasks(false), 10000); 
+        
+        loadTasks(); // Carga inicial
     }
 
-    startApp();
+    init();
 });
